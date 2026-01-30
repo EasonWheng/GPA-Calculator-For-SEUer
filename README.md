@@ -357,7 +357,7 @@ Q4：为什么一定要叫「成绩.txt」？
 
 🧮 计算规则说明
 
-1️⃣ Official GPA（制度口径）
+1️⃣ Official GPA
 
 纳入课程：
 	•	课程性质为：
@@ -447,4 +447,5 @@ License：MIT License
 ⚠️ 声明
 This project does NOT access any school system automatically.
 All input data must be obtained by the user through legitimate means.
+
 The author is not responsible for misuse of the tool.
