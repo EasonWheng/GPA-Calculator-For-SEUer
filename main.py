@@ -282,7 +282,7 @@ By using this software, you acknowledge that you have read, understood, and agre
 
 4. 無擔保聲明  
 本軟體以「現狀（AS IS）」方式提供，不附帶任何明示或默示之擔保。  
-所有計算結果（包括但不限於平均分、GPA）僅供參考，並不保證與任何官方評定結果一致。
+所有計算結果（包括但不限於平均分、GPA等）僅供參考，並不保證與任何官方評定結果一致。
 
 5. 責任限制  
 在任何情況下，作者均不對因使用本軟體所導致的任何直接或間接損失承擔責任。
@@ -327,4 +327,5 @@ By using this software, you acknowledge that you have read, understood, and agre
 
 
 if __name__ == "__main__":
+
     main()
