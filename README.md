@@ -20,7 +20,7 @@
 	•	Official GPA（必修 + 限选）
 	•	Core Major GPA（专业核心课程子集）
 	•	✅ 可配置的 Core 课程关键词
-	•	✅ 显式排除水课（黑名单机制）
+	•	✅ 可选排除相关课程
 	•	✅ 等级制课程自动映射为数值
 	•	✅ 输出清晰、可审计的课程明细
 	•	✅ 支持 100 分制 & US 4.0 制
@@ -449,3 +449,4 @@ This project does NOT access any school system automatically.
 All input data must be obtained by the user through legitimate means.
 
 The author is not responsible for misuse of the tool.
+
