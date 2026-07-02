@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GPA Calculator for SEUer</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #21262d;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text2: #8b949e;
+    --accent: #2ea043;
+    --accent2: #238636;
+    --warn: #d29922;
+    --danger: #f85149;
+    --blue: #58a6ff;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --shadow: 0 4px 24px rgba(0,0,0,.3);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* ---- Header ---- */
+  header {
+    text-align: center;
+    padding: 40px 20px 20px;
+    background: linear-gradient(180deg, rgba(46,160,67,.12) 0%, transparent 100%);
+    border-bottom: 1px solid var(--border);
+  }
+  header h1 {
+    font-size: 2rem;
+    background: linear-gradient(135deg, #2ea043, #58a6ff);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  header p { color: var(--text2); margin-top: 8px; font-size: .95rem; }
+
+  /* ---- Layout ---- */
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 24px 20px;
+    display: grid;
+    grid-template-columns: 480px 1fr;
+    gap: 24px;
+  }
+  @media (max-width: 960px) {
+    .container { grid-template-columns: 1fr; }
+  }
+
+  /* ---- Cards ---- */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+  }
+  .card h3 {
+    font-size: 1rem;
+    margin-bottom: 12px;
+    display: flex; align-items: center; gap: 8px;
+    color: var(--text);
+  }
+
+  /* ---- JSON Textarea ---- */
+  textarea.json-input {
+    width: 100%; height: 260px;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    font-family: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
+    font-size: .82rem;
+    resize: vertical;
+    outline: none;
+    transition: border-color .2s;
+  }
+  textarea.json-input:focus { border-color: var(--accent); }
+
+  /* ---- Tags Input ---- */
+  .tag-input-wrap {
+    display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+    background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 8px 10px; min-height: 44px; cursor: text;
+    transition: border-color .2s;
+  }
+  .tag-input-wrap:focus-within { border-color: var(--accent); }
+  .tag {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: var(--surface2); color: var(--blue);
+    border-radius: 6px; padding: 2px 8px; font-size: .82rem;
+    white-space: nowrap;
+  }
+  .tag .tag-x {
+    cursor: pointer; color: var(--text2); font-size: .9rem; line-height: 1;
+    padding: 0 2px; border-radius: 3px;
+  }
+  .tag .tag-x:hover { color: var(--danger); background: rgba(248,81,73,.15); }
+  .tag-input-wrap input {
+    border: none; background: transparent; color: var(--text);
+    font-size: .82rem; outline: none; flex: 1; min-width: 80px;
+  }
+
+  /* ---- Form ---- */
+  label.mini {
+    display: block; font-size: .78rem; color: var(--text2);
+    margin: 14px 0 4px; font-weight: 500;
+  }
+  input.text-field {
+    width: 100%; background: var(--bg); color: var(--text);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 8px 10px; font-size: .82rem; outline: none;
+    transition: border-color .2s;
+  }
+  input.text-field:focus { border-color: var(--accent); }
+
+  /* ---- Radio ---- */
+  .radio-group { display: flex; gap: 16px; margin-top: 6px; }
+  .radio-group label {
+    display: flex; align-items: center; gap: 6px; cursor: pointer;
+    font-size: .88rem;
+  }
+  .radio-group input[type="radio"] { accent-color: var(--accent); }
+
+  /* ---- Button ---- */
+  .btn-calc {
+    width: 100%; margin-top: 18px; padding: 12px;
+    background: linear-gradient(135deg, #238636, #2ea043);
+    color: #fff; border: none; border-radius: var(--radius-sm);
+    font-size: .95rem; font-weight: 600; cursor: pointer;
+    transition: opacity .2s, transform .1s;
+  }
+  .btn-calc:hover { opacity: .9; }
+  .btn-calc:active { transform: scale(.98); }
+  .btn-calc:disabled { opacity: .5; cursor: not-allowed; }
+
+  /* ---- Result Cards ---- */
+  .result-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .stat-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    text-align: center;
+  }
+  .stat-card .label { font-size: .78rem; color: var(--text2); margin-bottom: 4px; }
+  .stat-card .value { font-size: 2rem; font-weight: 700; }
+  .stat-card .value.green { color: var(--accent); }
+  .stat-card .value.blue  { color: var(--blue); }
+  .stat-card .sub   { font-size: .78rem; color: var(--text2); margin-top: 4px; }
+
+  /* ---- Table ---- */
+  .table-wrap { overflow-x: auto; }
+  table {
+    width: 100%; border-collapse: collapse; font-size: .84rem;
+  }
+  thead th {
+    text-align: left; padding: 8px 10px;
+    color: var(--text2); font-weight: 500; border-bottom: 2px solid var(--border);
+    white-space: nowrap;
+  }
+  tbody td {
+    padding: 7px 10px; border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  tbody tr:hover { background: rgba(46,160,67,.04); }
+  .badge {
+    display: inline-block; padding: 1px 7px; border-radius: 10px;
+    font-size: .72rem; font-weight: 500;
+  }
+  .badge.必修 { background: rgba(88,166,255,.15); color: var(--blue); }
+  .badge.限选 { background: rgba(210,153,34,.15); color: var(--warn); }
+  .score-est { color: var(--warn); }
+  .score-ok   { color: var(--text); }
+
+  /* ---- Warnings ---- */
+  .warn-box {
+    background: rgba(210,153,34,.08); border: 1px solid rgba(210,153,34,.3);
+    border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 16px;
+    font-size: .82rem;
+  }
+  .warn-box h4 { color: var(--warn); margin-bottom: 6px; font-size: .85rem; }
+
+  /* ---- Sections ---- */
+  .section-title {
+    font-size: 1.05rem; font-weight: 600; margin: 20px 0 10px;
+    color: var(--text);
+  }
+
+  /* ---- Empty / Loading ---- */
+  .empty-state {
+    text-align: center; padding: 60px 20px; color: var(--text2);
+  }
+  .empty-state .icon { font-size: 3rem; margin-bottom: 12px; opacity: .6; }
+  .spinner {
+    display: inline-block; width: 40px; height: 40px;
+    border: 3px solid var(--border); border-top-color: var(--accent);
+    border-radius: 50%; animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ---- Disclaimer ---- */
+  details.disclaimer {
+    margin-top: 24px; font-size: .76rem; color: var(--text2);
+    border-top: 1px solid var(--border); padding-top: 16px;
+  }
+  details.disclaimer summary { cursor: pointer; font-weight: 500; margin-bottom: 8px; }
+
+  /* ---- Footer ---- */
+  footer {
+    text-align: center; padding: 20px; color: var(--text2); font-size: .76rem;
+    border-top: 1px solid var(--border); margin-top: 30px;
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>GPA Calculator for SEUer</h1>
+  <p>Transparent. Auditable. Yours. — 粘贴 JSON，一键出分</p>
+</header>
+
+<div class="container">
+  <!-- ========== LEFT: Input Panel ========== -->
+  <div class="card" id="input-panel">
+    <h3>&#x1F4CB; 成绩 JSON</h3>
+    <textarea class="json-input" id="json-input"
+      placeholder="从教务系统 xscjcx.do 复制 JSON 粘贴到这里&#10;&#10;多页数据直接依次粘贴即可，无需分隔符"></textarea>
+
+    <label class="mini">&#x1F50D; Core Major 关键词（逗号分隔，点击标签移除）</label>
+    <div class="tag-input-wrap" id="kw-wrap" onclick="kwInput.focus()">
+      <span id="kw-tags"></span>
+      <input id="kw-input" placeholder="输入后回车添加...">
+    </div>
+
+    <label class="mini">&#x274C; 显式排除课程（逗号分隔）</label>
+    <input class="text-field" id="excludes-input"
+      placeholder="例如: 电子信息类专业学习概论, 某水课">
+
+    <label class="mini">&#x1F3AF; 绩点制度</label>
+    <div class="radio-group">
+      <label><input type="radio" name="gpa_type" value="4.8" checked> 4.8 制（东大官方）</label>
+      <label><input type="radio" name="gpa_type" value="4.0"> 4.0 制（美式）</label>
+    </div>
+
+    <button class="btn-calc" id="btn-calc" onclick="doCalculate()">&#x1F4CA; 开始计算</button>
+  </div>
+
+  <!-- ========== RIGHT: Results Panel ========== -->
+  <div id="results-panel">
+    <div class="empty-state" id="empty-state">
+      <div class="icon">&#x1F393;</div>
+      <p>粘贴成绩 JSON 并点击「开始计算」查看结果</p>
+    </div>
+
+    <div id="results-content" style="display:none;">
+      <!-- Stat Cards -->
+      <div class="result-grid">
+        <div class="stat-card">
+          <div class="label">Official GPA（必修 + 限选）</div>
+          <div class="value green" id="official-gpa">—</div>
+          <div class="sub">100分制: <span id="official-100">—</span> | <span id="official-count">0</span> 门课</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Core Major GPA（专业核心）</div>
+          <div class="value blue" id="core-gpa">—</div>
+          <div class="sub">100分制: <span id="core-100">—</span> | <span id="core-count">0</span> 门课</div>
+        </div>
+      </div>
+
+      <!-- Warnings -->
+      <div class="warn-box" id="warn-box" style="display:none;">
+        <h4>&#x26A0;&#xFE0F; 成绩来源提示</h4>
+        <div id="warn-list"></div>
+      </div>
+
+      <!-- Official Table -->
+      <div class="section-title">&#x1F4D6; Official 全部课程</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>课程名称</th><th>类型</th><th>成绩</th><th>学分</th><th>绩点</th><th>备注</th>
+          </tr></thead>
+          <tbody id="official-table"></tbody>
+        </table>
+      </div>
+
+      <!-- Core Table -->
+      <div class="section-title" style="margin-top:20px;">&#x1F3AF; Core Major 课程（子集）</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>课程名称</th><th>类型</th><th>成绩</th><th>学分</th><th>绩点</th><th>备注</th>
+          </tr></thead>
+          <tbody id="core-table"></tbody>
+        </table>
+      </div>
+
+      <details class="disclaimer">
+        <summary>&#x26A0;&#xFE0F; 免责声明</summary>
+        <p>本项目仅供学习与个人使用。程序不会自动访问任何网站、请求任何接口或上传任何数据。
+        所有计算结果（包括但不限于均分、GPA 等）仅供参考，不保证与任何官方成绩评定标准一致。
+        使用本软件即视为您已阅读、理解并同意上述免责声明。</p>
+      </details>
+    </div>
+  </div>
+</div>
+
+<footer>
+  MIT License · Made with care for SEUer ·
+  <a href="https://github.com/EasonWheng/GPA-Calculator-For-SEUer" target="_blank">GitHub</a>
+</footer>
+
+<script>
+// ===================== State =====================
+let keywords = [];
+let gpaLabel = "4.8";
+
+// ===================== Init =====================
+async function init() {
+  try {
+    const r = await fetch("/api/defaults");
+    const d = await r.json();
+    if (d.keywords) { keywords = d.keywords; renderTags(); }
+    if (d.excludes) document.getElementById("excludes-input").value = d.excludes.join(", ");
+  } catch(e) { console.error("Failed to load defaults:", e); }
+}
+
+// ===================== Tags =====================
+const kwWrap = document.getElementById("kw-wrap");
+const kwInput = document.getElementById("kw-input");
+const kwTags  = document.getElementById("kw-tags");
+
+function renderTags() {
+  kwTags.innerHTML = keywords.map((k, i) =>
+    `<span class="tag">${esc(k)}<span class="tag-x" onclick="removeTag(${i})">&times;</span></span>`
+  ).join("");
+}
+
+function esc(s) {
+  const el = document.createElement("span"); el.textContent = s; return el.innerHTML;
+}
+
+function addTag(raw) {
+  const k = raw.replace(/,/g, "").trim();
+  if (k && !keywords.includes(k)) { keywords.push(k); renderTags(); }
+}
+
+function removeTag(i) { keywords.splice(i, 1); renderTags(); }
+
+kwInput.addEventListener("keydown", e => {
+  if (e.key === "Enter" || e.key === ",") {
+    e.preventDefault();
+    addTag(kwInput.value);
+    kwInput.value = "";
+  }
+  if (e.key === "Backspace" && kwInput.value === "" && keywords.length > 0) {
+    keywords.pop(); renderTags();
+  }
+});
+
+function getExcludes() {
+  const raw = document.getElementById("excludes-input").value;
+  return raw.split(/[,，]/).map(s => s.trim()).filter(Boolean);
+}
+
+function getGpaType() {
+  const el = document.querySelector("input[name='gpa_type']:checked");
+  return el ? el.value : "4.8";
+}
+
+// ===================== Calculate =====================
+async function doCalculate() {
+  const jsonText = document.getElementById("json-input").value.trim();
+  if (!jsonText) {
+    alert("请先粘贴成绩 JSON 数据。");
+    return;
+  }
+
+  const btn = document.getElementById("btn-calc");
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spinner" style="width:16px;height:16px;border-width:2px;vertical-align:middle;"></span> 计算中...`;
+
+  document.getElementById("empty-state").style.display = "none";
+  document.getElementById("results-content").style.display = "none";
+
+  try {
+    const gpaType = getGpaType();
+    gpaLabel = gpaType;
+    const r = await fetch("/api/calculate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        json_data: jsonText,
+        keywords: keywords,
+        excludes: getExcludes(),
+        gpa_type: gpaType,
+      }),
+    });
+    const d = await r.json();
+
+    if (d.error) {
+      document.getElementById("empty-state").style.display = "";
+      document.getElementById("empty-state").querySelector("p").textContent = d.message;
+      document.getElementById("empty-state").querySelector(".icon").textContent = "❌";
+      return;
+    }
+
+    renderResults(d);
+  } catch(e) {
+    document.getElementById("empty-state").style.display = "";
+    document.getElementById("empty-state").querySelector("p").textContent = "请求失败：" + e.message;
+    document.getElementById("empty-state").querySelector(".icon").textContent = "❌";
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = "&#x1F4CA; 开始计算";
+  }
+}
+
+// ===================== Render =====================
+function renderResults(d) {
+  document.getElementById("empty-state").style.display = "none";
+  document.getElementById("results-content").style.display = "";
+
+  const gpLabel = d.gpa_type + " 制";
+
+  document.getElementById("official-gpa").textContent = d.official_gpa != null ? d.official_gpa : "N/A";
+  document.getElementById("official-100").textContent = d.official_avg_100 != null ? d.official_avg_100 : "N/A";
+  document.getElementById("official-count").textContent = d.official_count;
+
+  document.getElementById("core-gpa").textContent = d.core_gpa != null ? d.core_gpa : "N/A";
+  document.getElementById("core-100").textContent = d.core_avg_100 != null ? d.core_avg_100 : "N/A";
+  document.getElementById("core-count").textContent = d.core_count;
+
+  // Warnings
+  const warnBox = document.getElementById("warn-box");
+  const warnList = document.getElementById("warn-list");
+  if (d.warnings && d.warnings.length > 0) {
+    warnBox.style.display = "";
+    warnList.innerHTML = d.warnings.map(w => `<div>· ${esc(w)}</div>`).join("");
+  } else {
+    warnBox.style.display = "none";
+  }
+
+  // Tables
+  document.getElementById("official-table").innerHTML = renderTable(d.official_courses);
+  document.getElementById("core-table").innerHTML = d.core_courses.length
+    ? renderTable(d.core_courses)
+    : `<tr><td colspan="6" style="color:var(--text2);text-align:center;padding:20px;">无匹配的核心课程</td></tr>`;
+
+  // Scroll to results
+  document.getElementById("results-panel").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function renderTable(courses) {
+  return courses.map(c => `
+    <tr>
+      <td>${esc(c.name)}</td>
+      <td><span class="badge ${esc(c.type)}">${esc(c.type)}</span></td>
+      <td class="${c.estimated ? 'score-est' : 'score-ok'}">${c.score}${c.estimated ? '*' : ''}</td>
+      <td>${c.credit}</td>
+      <td>${c.gpa != null ? c.gpa.toFixed(1) : '—'}</td>
+      <td style="color:var(--text2);font-size:.76rem;">${c.estimated ? esc(c.estimate_reason) : ''}</td>
+    </tr>
+  `).join("");
+}
+
+// ===================== Startup =====================
+init();
+</script>
+</body>
+</html>
