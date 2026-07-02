@@ -1,0 +1,23 @@
+# Personal grade data
+成绩.txt
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.spec
+build/
+dist/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Executable (use GitHub Releases instead)
+*.exe

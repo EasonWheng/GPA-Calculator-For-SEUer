@@ -1,4 +1,5 @@
 import json
+import math
 from typing import List, Dict, Optional
 
 # ================== 等级制映射 ==================
@@ -37,28 +38,53 @@ def extract_json_objects(text: str) -> List[str]:
     return objs
 
 def load_all_rows_from_txt(path: str) -> List[Dict]:
-    with open(path, "r", encoding="utf-8") as f:
-        text = f.read()
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            text = f.read()
+    except FileNotFoundError:
+        print(f"错误：找不到文件 {path}，请将成绩数据保存为 成绩.txt 后重试。")
+        return []
+
     rows = []
     for js in extract_json_objects(text):
-        data = json.loads(js)
-        rows.extend(data["datas"]["xscjcx"]["rows"])
-    return rows
+        try:
+            data = json.loads(js)
+        except json.JSONDecodeError:
+            continue
 
-# ================== 成绩解析 ==================
-def parse_score(zcj) -> Optional[float]:
-    if zcj is None:
-        return None
-    try:
-        return float(zcj)
-    except (TypeError, ValueError):
-        return GRADE_MAP.get(str(zcj).strip())
+        datas = data.get("datas")
+        if not isinstance(datas, dict):
+            continue
+
+        page_rows = []
+        # 优先 datas.xscjcx.rows
+        xscjcx = datas.get("xscjcx")
+        if isinstance(xscjcx, dict):
+            page_rows = xscjcx.get("rows", [])
+        # 回退：遍历 datas 下其他 key
+        if not page_rows:
+            for key in datas:
+                v = datas[key]
+                if isinstance(v, dict) and "rows" in v:
+                    page_rows = v["rows"]
+                    break
+
+        # 过滤非 dict 的行（防御空占位行）
+        for r in page_rows:
+            if isinstance(r, dict):
+                rows.append(r)
+
+    return rows
 
 # ================== Official 课程抽取 ==================
 def extract_official_courses(rows: List[Dict]) -> List[Dict]:
     courses = []
 
     for r in rows:
+        # 跳过缺少关键字段的空行（如 API 返回的占位行）
+        if not r.get("XSKCM") and not r.get("KCM"):
+            continue
+
         if r.get("KCXZDM_DISPLAY") not in ("必修", "限选"):
             continue
 
@@ -71,13 +97,12 @@ def extract_official_courses(rows: List[Dict]) -> List[Dict]:
         if credit <= 0:
             continue
 
-        # 🔥 核心：统一从 estimate_zcj_from_row 拿成绩
         score, is_est, msg = estimate_zcj_from_row(r)
         if score is None:
             continue
 
         courses.append({
-            "name": r.get("XSKCM"),
+            "name": r.get("XSKCM") or r.get("KCM", ""),
             "type": r.get("KCXZDM_DISPLAY"),
             "score": score,
             "credit": credit,
@@ -134,7 +159,11 @@ def parse_float_safe(x):
         if x is None: return None
         s = str(x).strip()
         if s == "" or s.lower() in ("待评教", "na", "n/a"): return None
-        return float(s)
+        v = float(s)
+        # 过滤哨兵值和非正规数值
+        if v < 0 or math.isinf(v) or math.isnan(v):
+            return None
+        return v
     except:
         return None
 
@@ -144,52 +173,81 @@ def estimate_zcj_from_row(row):
     输入：单条记录（dict）
     输出： (zcj_value (float or None), is_estimate (bool), message (str))
     """
-    # 如果系统已给出且为数值，直接返回（非估算）
+    # 1. 尝试 ZCJ（总成绩）
     zcj_raw = row.get("ZCJ")
     zcj_val = parse_float_safe(zcj_raw)
     if zcj_val is not None:
         return zcj_val, False, "ZCJ present as numeric"
 
-    # 尝试把文字等级映射为数值
+    # 1b. ZCJ 可能是文字等级
     if isinstance(zcj_raw, str) and zcj_raw.strip() in GRADE_MAP:
         return float(GRADE_MAP[zcj_raw.strip()]), False, "ZCJ mapped from grade label"
 
-    # 取分项成绩与权重
-    # 常见字段名：QMCJ (期末), PSCJ (平时), QZCJ (其他/综合)
+    # 2. 尝试 DJCJMC（等级成绩名称，如"优"/"良"/"中"），常见于五级制课程
+    djcmc = row.get("DJCJMC")
+    if isinstance(djcmc, str) and djcmc.strip() in GRADE_MAP:
+        return float(GRADE_MAP[djcmc.strip()]), False, "DJCJMC mapped from grade label"
+
+    # 3. 尝试 XSZCJMC（显示总成绩名称），可能是数字字符串或等级文字
+    xszcj = row.get("XSZCJMC")
+    xszcj_val = parse_float_safe(xszcj)
+    if xszcj_val is not None:
+        return xszcj_val, False, "XSZCJMC present as numeric"
+    if isinstance(xszcj, str) and xszcj.strip() in GRADE_MAP:
+        return float(GRADE_MAP[xszcj.strip()]), False, "XSZCJMC mapped from grade label"
+
+    # 4. 尝试所有 _DISPLAY 字段（分项成绩显示值，有时是等级文字如"优"）
+    for disp_key in ("QMCJ_DISPLAY", "PSCJ_DISPLAY", "SYCJ_DISPLAY", "SJCJ_DISPLAY", "QZCJ_DISPLAY"):
+        disp_val = row.get(disp_key)
+        if isinstance(disp_val, str) and disp_val.strip() in GRADE_MAP:
+            return float(GRADE_MAP[disp_val.strip()]), True, f"{disp_key} mapped from grade label"
+
+    # 4b. 尝试所有 _DISPLAY 字段中的数字值
+    for disp_key in ("QMCJ_DISPLAY", "PSCJ_DISPLAY", "SYCJ_DISPLAY", "SJCJ_DISPLAY", "QZCJ_DISPLAY"):
+        disp_val = parse_float_safe(row.get(disp_key))
+        if disp_val is not None:
+            return disp_val, True, f"{disp_key} present as numeric"
+
+    # 5. 从分项成绩加权估算
     comp_names = [
         ("QMCJ", "QMCJXS"),
         ("PSCJ", "PSCJXS"),
-        ("QZCJ", "QZCJXS")
+        ("QZCJ", "QZCJXS"),
+        ("SYCJ", "SYCJXS"),
+        ("SJCJ", "SJCJXS"),
     ]
 
     total_weight = 0.0
     weighted_sum = 0.0
     have_any = False
+    missing_weight_for_score = None
 
     for score_key, weight_key in comp_names:
         s = parse_float_safe(row.get(score_key))
-        w = parse_float_safe(row.get(weight_key))
-        # 有时权重是字符串"50"或"50.0"或缺失
+        w_raw = row.get(weight_key)
+        w = parse_float_safe(w_raw)
         if s is None:
             continue
         if w is None:
-            # 如果权重缺失但只有一项有分，可以视为100%，否则无法确定
-            # 为稳健起见：记下并继续
-            return None, True, f"Missing weight {weight_key} for present component {score_key}"
+            # 权重可能以 _DISPLAY 形式存在
+            w_disp = row.get(f"{weight_key}_DISPLAY")
+            w = parse_float_safe(w_disp)
+        if w is None:
+            missing_weight_for_score = (score_key, weight_key)
+            continue
         have_any = True
         weighted_sum += s * w
         total_weight += w
 
     if not have_any:
+        if missing_weight_for_score is not None:
+            return None, True, f"Missing weight {missing_weight_for_score[1]} for present component {missing_weight_for_score[0]}"
         return None, True, "No component scores available to estimate"
 
-    # 如果权重总和接近 0，无法估算
     if total_weight <= 0:
         return None, True, "Total weight is zero or invalid"
 
-    # 若权重总和不是 100，按比例归一化（更稳健）
     z_est = weighted_sum / total_weight
-    # 把归一化后的值放回 0..100 区间（通常已在0..100）
     return z_est, True, f"Estimated from components; total_weight={total_weight}"
 
 
@@ -282,7 +340,7 @@ By using this software, you acknowledge that you have read, understood, and agre
 
 4. 無擔保聲明  
 本軟體以「現狀（AS IS）」方式提供，不附帶任何明示或默示之擔保。  
-所有計算結果（包括但不限於平均分、GPA等）僅供參考，並不保證與任何官方評定結果一致。
+所有計算結果（包括但不限於平均分、GPA）僅供參考，並不保證與任何官方評定結果一致。
 
 5. 責任限制  
 在任何情況下，作者均不對因使用本軟體所導致的任何直接或間接損失承擔責任。
@@ -327,5 +385,4 @@ By using this software, you acknowledge that you have read, understood, and agre
 
 
 if __name__ == "__main__":
-
     main()
