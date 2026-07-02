@@ -5,11 +5,16 @@ import threading
 import webbrowser
 from flask import Flask, request, jsonify, render_template
 
-# Ensure we can import gpa_engine from the same directory
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# Determine base path (handles PyInstaller _MEIPASS extraction)
+if getattr(sys, "frozen", False):
+    _BASE_DIR = sys._MEIPASS
+else:
+    _BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+sys.path.insert(0, _BASE_DIR)
 from gpa_engine import calculate_all, get_defaults
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder=os.path.join(_BASE_DIR, "templates"))
 
 
 @app.route("/")
