@@ -21,6 +21,20 @@
     --radius-sm: 8px;
     --shadow: 0 4px 24px rgba(0,0,0,.3);
   }
+  [data-theme="light"] {
+    --bg: #f6f8fa;
+    --surface: #ffffff;
+    --surface2: #f0f2f5;
+    --border: #d0d7de;
+    --text: #1f2328;
+    --text2: #656d76;
+    --accent: #1a7f37;
+    --accent2: #238636;
+    --warn: #9a6700;
+    --danger: #cf222e;
+    --blue: #0969da;
+    --shadow: 0 4px 24px rgba(0,0,0,.08);
+  }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -37,6 +51,10 @@
     padding: 40px 20px 20px;
     background: linear-gradient(180deg, rgba(46,160,67,.12) 0%, transparent 100%);
     border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+  [data-theme="light"] header {
+    background: linear-gradient(180deg, rgba(26,127,55,.08) 0%, transparent 100%);
   }
   header h1 {
     font-size: 2rem;
@@ -230,11 +248,23 @@
     border-top: 1px solid var(--border); margin-top: 30px;
   }
   footer a { color: var(--accent); text-decoration: none; }
+
+  /* ---- Theme Toggle ---- */
+  .theme-btn {
+    position: absolute; top: 16px; right: 20px;
+    width: 38px; height: 38px;
+    border: 1px solid var(--border); border-radius: 50%;
+    background: var(--surface); color: var(--text2); cursor: pointer;
+    font-size: 1.1rem; display: flex; align-items: center; justify-content: center;
+    transition: background .2s, color .2s, border-color .2s;
+  }
+  .theme-btn:hover { color: var(--text); border-color: var(--accent); }
 </style>
 </head>
 <body>
 
 <header>
+  <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="切换日间/夜晚模式">&#x1F31E;</button>
   <h1>GPA Calculator for SEUer</h1>
   <p>Transparent. Auditable. Yours. — 粘贴 JSON，一键出分</p>
 </header>
@@ -483,6 +513,38 @@ function renderTable(courses) {
     </tr>
   `).join("");
 }
+
+// ===================== Theme =====================
+const THEME_KEY = "gpa-calc-theme";
+
+function getSystemTheme() {
+  return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+}
+
+function applyTheme(t) {
+  if (t === "light") {
+    document.documentElement.setAttribute("data-theme", "light");
+    document.getElementById("theme-btn").innerHTML = "&#x1F31C;";
+  } else {
+    document.documentElement.removeAttribute("data-theme");
+    document.getElementById("theme-btn").innerHTML = "&#x1F31E;";
+  }
+}
+
+function toggleTheme() {
+  const current = document.documentElement.hasAttribute("data-theme") ? "light" : "dark";
+  const next = current === "light" ? "dark" : "light";
+  applyTheme(next);
+  localStorage.setItem(THEME_KEY, next);
+}
+
+(function loadTheme() {
+  const saved = localStorage.getItem(THEME_KEY);
+  applyTheme(saved || getSystemTheme());
+  window.matchMedia("(prefers-color-scheme: light)").addEventListener("change", e => {
+    if (!localStorage.getItem(THEME_KEY)) applyTheme(e.matches ? "light" : "dark");
+  });
+})();
 
 // ===================== Startup =====================
 init();
