@@ -1,0 +1,97 @@
+{
+    "datas": {
+        "xscjcx": {
+            "extParams": {
+                "code": 1,
+                "msg": "查询失败"
+            },
+            "pageSize": 10,
+            "pageNumber": 1,
+            "totalSize": 64,
+            "rows": [
+                {
+                    "TDKCH": null,
+                    "XDFSDM": "01",
+                    "JDF": null,
+                    "QTCJ10": null,
+                    "DJCJMC": null,
+                    "DJCJLXDM": "100",
+                    "CXCKDM": "01"
+                },
+                {
+                    "TDKCH": null,
+                    "XDFSDM": "01",
+                    "JDF": null,
+                    "TDKCM": null,
+                    "QTCJ8_DISPLAY": "",
+                    "QTCJ6_DISPLAY": "",
+                    "XNXQDM": "2025-2026-2",
+                    "DJCJLXDM": "100",
+                    "CXCKDM": "01"
+                },
+                {
+                    "TDKCH": null,
+                    "XDFSDM": "01",
+                    "JDF": null,
+                    "TDKCM": null,
+                    "QTCJ10": null,
+                    "DJCJMC": null,
+                    "DJCJLXDM": "100",
+                    "CXCKDM": "01"
+                },
+                {
+                    "TDKCH": null,
+                    "XDFSDM": "01",
+                    "JDF": null,
+                    "TDKCM": null,
+                    "SFPJ": null,
+                    "KCLBDM": "14",
+                    "SFPJ_DISPLAY": "",
+                    "QTCJ10": null,
+                    "DJCJMC": null,
+                    "DJCJLXDM": "100",
+                    "CXCKDM": "01"
+                }
+            ]
+        }
+    },
+    "code": "0"
+}
+{
+    "datas": {
+        "xscjcx": {
+            "extParams": {
+                "code": 1,
+                "msg": "查询失败"
+            },
+            "pageSize": 10,
+            "pageNumber": 2,
+            "totalSize": 63,
+            "rows": [
+                {
+                    "TDKCH": null,
+                    "XDFSDM": "01",
+                    "JDF": null,
+                    "TDKCM": null,
+                    "KSSJ": "2025-09-15",
+                    "QTCJ10": null,
+                    "DJCJMC": null,
+                    "DJCJLXDM": "100",
+                    "CXCKDM": "01"
+                },
+                {
+                    "TDKCH": null,
+                    "XDFSDM": "01",
+                    "JDF": null,
+                    "TDKCM": null,
+                    "KSSJ": "2025-09-28",
+                    "KCLBDM": "11",
+                    "SFPJ_DISPLAY": "",
+                    "QTCJ10": null,
+                    "DJCJLXDM": "500",
+                    "CXCKDM": "01"
+                }            ]
+        }
+    },
+    "code": "0"
+}
