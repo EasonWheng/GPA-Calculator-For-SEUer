@@ -1,4 +1,16 @@
-📊 GPA Calculator（可审计的绩点计算器）
+<p align="center">
+  <img src="logoradio.png" alt="SEU Radio" height="50" /><br/>
+  <img src="logo.png" alt="GPA Calculator for SEUer" height="56" />
+</p>
+
+<p align="center">
+  <strong>Transparent. Auditable. Yours.</strong><br/>
+  <sub>粘贴 JSON，一键出分 · 本地计算 · 不联网 · 不传数据</sub>
+</p>
+
+---
+
+📊 GPA Calculator for SEUer（可审计的绩点计算器）
 
 一个用于从教务系统接口返回的 JSON 数据中
 自动计算 Official GPA 与 Core Major GPA 的工具
@@ -24,6 +36,26 @@
 	•	✅ 等级制课程自动映射为数值
 	•	✅ 输出清晰、可审计的课程明细
 	•	✅ 支持 100 分制 & US 4.0 制
+	•	✅ Web 图形界面（粘贴 JSON → 一键出分）
+	•	✅ 自定义 Core 课程关键词 & 排除列表
+	•	✅ 日间/夜间双主题
+
+---
+
+🚀 快速开始（Web 版）
+
+1. 下载 `GPA计算器.exe`（见 [Releases](https://github.com/EasonWheng/GPA-Calculator-For-SEUer/releases)）
+2. 双击运行，浏览器自动打开
+3. 粘贴成绩 JSON → 点击「开始计算」
+4. 结果即时显示，支持 4.0 / 4.8 两种绩点制
+
+或者从源码运行：
+
+```bash
+pip install flask
+cd webapp
+python app.py
+```
 
 ⸻
 
