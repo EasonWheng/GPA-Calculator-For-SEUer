@@ -1,5 +1,6 @@
 <p align="center">
-  <img src="logoradio.png" alt="SEU Radio" height="50" /><br/>
+  <img src="logoradio.png" alt="SEU Radio" height="56" />
+  <br/>
   <img src="logo.png" alt="GPA Calculator for SEUer" height="56" />
 </p>
 
