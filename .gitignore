@@ -5,3 +5,5 @@ dist/
 *.pyc
 .env
 *.exe
+成绩.txt
+成绩*.txt
